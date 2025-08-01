@@ -52,7 +52,5 @@ elif role == "teacher":
     import teacher
     teacher.menu(current_id)
 elif role == "student":
-    #student_class = cur.execute("SELECT class_id FROM students WHERE user_id = (SELECT id FROM users WHERE username=?)", (current_usern,)).fetchone()[0]
-    #current_user = Student(current_usern, student_class)
     import student
     student.menu(current_id)

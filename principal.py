@@ -85,7 +85,7 @@ def list_grades():
     classes = cur.execute("SELECT class_id FROM classes").fetchall()
     for a_class in classes[0]:
         class_name = cur.execute("SELECT name FROM classes WHERE class_id=?", (a_class,)).fetchone()
-        print(class_name, "Sınıfının Notları:")
+        print(class_name[0], "Sınıfının Notları:")
         grades_of_class = cur.execute ("""SELECT student_id, username, subjects.name, exam1 ,exam2, project, average
                                        FROM grades
                                        LEFT JOIN users ON users.id = grades.student_id

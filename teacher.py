@@ -83,6 +83,7 @@ def view_subject_grades(current_id):
     if not subjects:
         print("Hiçbir derse atanmamışsınız.")
         menu(current_id)
+    print(subject_names)
     selected_subject = input("Görüntülemek istediğiniz dersi seçiniz: ")
     if selected_subject not in subject_names:
         print("Hatalı girdi.")
