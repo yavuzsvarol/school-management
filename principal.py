@@ -6,7 +6,7 @@ cur = con.cursor()
 
 def menu():
     print("\nMüdür paneline hoş geldiniz.")
-    print("""1- Verileri Görüntüle\n2 - Kullanici ekle\n3 - Ders Oluştur
+    print("""1 - Verileri Görüntüle\n2 - Kullanici ekle\n3 - Ders Oluştur
 4 - Sınıf Oluştur\n5 - Derse Öğretmen Ata\n6 - Sınıfa Öğretmen Ata\n7 - Çıkış""")
     match input("\nSeçiminizi yapınız: "):
         case "1":
