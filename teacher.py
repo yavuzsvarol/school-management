@@ -23,16 +23,16 @@ def not_yukle(current_id):
     stu_id = int(input("Not vermek istediğiniz öğrencinin ID'sini giriniz: "))
     taken_classes = cur.execute("""SELECT subjects.Name FROM grades 
                                 LEFT JOIN subjects ON grades.subject_id = subjects.subject_id 
-                                WHERE grades.student_id=?""", (stu_id,)).fetchall()
+                                WHERE grades.student_id=? AND teacher_id=?""", (stu_id, current_id,)).fetchall()
     subject_names = [subject[0] for subject in taken_classes]
+    if not taken_classes:
+        print("Öğrenci sizin verdiğiniz dersleri almıyor.")
+        menu(current_id)
     print(subject_names)
     stu_subject = input("Not vermek istediğiniz dersi seçiniz: ")
     subject_id_row = cur.execute("SELECT subject_id FROM subjects WHERE name=?", (stu_subject,)).fetchone()
     subject_id = subject_id_row[0] if subject_id_row else None
-    if not taken_classes:
-        print("Öğrenci ders almıyor.")
-        menu(current_id)
-    elif stu_subject not in subject_names:
+    if stu_subject not in subject_names:
         print("Hatalı girdi.")
         menu(current_id)
     new_grade = int(input("Girmek istediğiniz not: "))

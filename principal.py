@@ -38,7 +38,7 @@ def list_data():
         case "3":
             list_classes()
         case "4":
-            pass
+            list_grades()
         case "5":
             menu()
         case _:
@@ -74,17 +74,26 @@ def list_classes():
         LEFT JOIN users ON classes.teacher_id = users.id AND users.role='teacher'
     """).fetchall()
     for a_class in classes:
-        if a_class[3] is not None:
-            teacher_name = a_class[3]
+        if a_class[2] is not None:
+            teacher_name = a_class[2]
         else: teacher_name = "Atanmamış"
-        print(f"ID: {a_class[0]} - Ders Adı: {a_class[1]} - Kredi: {a_class[2]} - Öğretmen: {teacher_name}")
+        print(f"ID: {a_class[0]} - Sınıf Adı: {a_class[1]} - Öğretmen: {teacher_name}")
     list_data()
 
 def list_grades():
     print("\nNot Listesi:")
-    grades = cur.execute("""
-    SELECT student_id, username, exam1, exam2, 
-    """)
+    classes = cur.execute("SELECT class_id FROM classes").fetchall()
+    for a_class in classes[0]:
+        class_name = cur.execute("SELECT name FROM classes WHERE class_id=?", (a_class,)).fetchone()
+        print(class_name, "Sınıfının Notları:")
+        grades_of_class = cur.execute ("""SELECT student_id, username, subjects.name, exam1 ,exam2, project, average
+                                       FROM grades
+                                       LEFT JOIN users ON users.id = grades.student_id
+                                       LEFT JOIN students ON students.user_id = grades.student_id
+                                       LEFT JOIN subjects ON grades.subject_id = subjects.subject_id
+                                       WHERE class_id=?""", (a_class,)).fetchall()
+        for grade in grades_of_class:
+            print(f"ID: {grade[0]} - Ad: {grade[1]} - Ders: {grade[2]} - Notlar: {grade[3]} - {grade[4]} - {grade[5]} - Ortalama: {grade[6]}")
 
 def add_user_menu():
     print("\nKullanici ekleme menusu")
