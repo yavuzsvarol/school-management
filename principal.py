@@ -104,6 +104,15 @@ def add_user_menu():
         print("Geçersiz rol. Lütfen 'admin', 'vice_admin', 'teacher' veya 'student' olarak giriniz.")
         return add_user_menu()
     cur.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", (new_username, new_password, new_role))
+    if new_role == 'student':
+        cur.execute("""
+    INSERT INTO students (user_id, class_id)
+    SELECT users.id, (
+    SELECT class_id FROM classes ORDER BY RANDOM() LIMIT 1)
+    FROM users
+    WHERE username = ? AND password = ? AND role = 'student'
+    """, (new_username, new_password))
+
     con.commit()
     print("Kullanici başarıyla eklendi.")
     menu()
