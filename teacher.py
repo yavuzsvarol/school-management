@@ -60,6 +60,7 @@ def not_yukle(current_id):
 def view_class_grades(current_id):
     classes = cur.execute("SELECT name FROM classes WHERE teacher_id=?", (current_id,)).fetchall()
     class_names = [a_class[0] for a_class in classes]
+    print(class_names)
     selected_class = input("Görüntülemek istediğiniz sınıfı seçiniz: ")
     if selected_class not in class_names:
         print("Hatalı girdi.")
@@ -75,7 +76,9 @@ def view_class_grades(current_id):
                                 LEFT JOIN subjects ON grades.subject_id = subjects.subject_id
                                 LEFT JOIN students ON students.user_id = users.id 
                                 WHERE class_id=?""", (class_id,)).fetchall()
-    print(class_to_view)
+    for grade in class_to_view:
+        print(f"ID: {grade[0]} - Ad: {grade[1]} - Ders: {grade[2]} - Notlar: {grade[3]} - {grade[4]} - {grade[5]} - Ortalama: {grade[6]}")
+    menu(current_id)
 
 def view_subject_grades(current_id):
     subjects = cur.execute("SELECT name FROM subjects WHERE teacher_id=?", (current_id,)).fetchall()
@@ -90,10 +93,12 @@ def view_subject_grades(current_id):
         menu(current_id)
     subject_id_row = cur.execute("SELECT subject_id FROM subjects WHERE name=?", (selected_subject,)).fetchone()
     subject_id = subject_id_row[0] if subject_id_row else None
-    subject_to_view = cur.execute("""SELECT users.id, username, subjects.name, exam1, exam2, project, average
+    subject_to_view = cur.execute("""SELECT users.id, username, exam1, exam2, project, average
                                 FROM users
                                 LEFT JOIN grades ON users.id = grades.student_id
                                 LEFT JOIN subjects ON grades.subject_id = subjects.subject_id
                                 LEFT JOIN students ON students.user_id = users.id 
-                                WHERE grades.subject_id=?""", (subject_id,)).fetchall()
-    print(subject_to_view)
+                                WHERE grades.subject_id=?""", (str(subject_id))).fetchall()
+    for grade in subject_to_view:
+        print(f"ID: {grade[0]} - Ad: {grade[1]} - Notlar: {grade[2]} - {grade[3]} - {grade[4]} - Ortalama: {grade[5]}")
+    menu(current_id)
