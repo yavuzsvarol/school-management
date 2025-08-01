@@ -83,17 +83,18 @@ def list_classes():
 def list_grades():
     print("\nNot Listesi:")
     classes = cur.execute("SELECT class_id FROM classes").fetchall()
-    for a_class in classes[0]:
-        class_name = cur.execute("SELECT name FROM classes WHERE class_id=?", (a_class,)).fetchone()
-        print(class_name[0], "Sınıfının Notları:")
+    for a_class in classes:
+        class_name = cur.execute("SELECT name FROM classes WHERE class_id=?", (a_class[0],)).fetchone()
+        print("\n", class_name[0], "Sınıfının Notları:")
         grades_of_class = cur.execute ("""SELECT student_id, username, subjects.name, exam1 ,exam2, project, average
                                        FROM grades
                                        LEFT JOIN users ON users.id = grades.student_id
                                        LEFT JOIN students ON students.user_id = grades.student_id
                                        LEFT JOIN subjects ON grades.subject_id = subjects.subject_id
-                                       WHERE class_id=?""", (a_class,)).fetchall()
+                                       WHERE class_id=?""", (a_class[0],)).fetchall()
         for grade in grades_of_class:
             print(f"ID: {grade[0]} - Ad: {grade[1]} - Ders: {grade[2]} - Notlar: {grade[3]} - {grade[4]} - {grade[5]} - Ortalama: {grade[6]}")
+    menu()
 
 def add_user_menu():
     print("\nKullanici ekleme menusu")
