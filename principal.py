@@ -145,11 +145,11 @@ def assign_teacher_to_class_menu():
     print("\nSınıf öğretmene atama menusu")
     teacher_username = input("Öğretmen kullanıcı adını giriniz: ")
     teacher_id = cur.execute("SELECT id FROM users WHERE username=? AND role='teacher'", (teacher_username,)).fetchone()[0]
-    class_count = cur.execute("SELECT COUNT(*) FROM classes WHERE teacher_id=?", (teacher_id)).fetchone()[0]
+    class_count = cur.execute("SELECT COUNT(*) FROM classes WHERE teacher_id=?", (teacher_id,)).fetchone()[0]
     if class_count >= 7:
         print("Öğretmen zaten 7 sınıfa atanmış.")
         menu()
-    class_name = input("Ders adı giriniz: ")
+    class_name = input("Sınıf adı giriniz: ")
     cur.execute("UPDATE classes SET teacher_id=? WHERE name=?", (teacher_id, class_name))
     con.commit()
     print("Öğretmen başarıyla sınıfa atandı.")

@@ -18,9 +18,12 @@ def menu(current_id):
 def list_own_grades(current_id):
     grades = cur.execute("""SELECT name, credit, exam1, exam2, project FROM grades
                          LEFT JOIN subjects ON grades.subject_id = subjects.subject_id
-                         WHERE grades.student_id=?""", (current_id,)).fetchall()
+                         WHERE grades.student_id=?""", (str(current_id),)).fetchall()
     ortalamalar = []
     toplam_kredi = 0
+    if not grades:
+        print("Şuanda hiçbir ders almıyorsunuz.")
+        menu(current_id)
     for grade in grades:
         ortalama = (grade[2] + grade[3] + grade[4]) / 3
         print(

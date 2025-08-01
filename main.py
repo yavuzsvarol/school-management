@@ -4,25 +4,6 @@ path = os.path.dirname(os.path.realpath(__file__))
 con = sqlite3.connect(path + "\\db1.db")
 cur = con.cursor()
 
-class User:
-    def __init__(self, username, role):
-        self.username = username
-        self.role = role
-
-class Principal(User): pass
-class VicePrincipal(User): pass
-class Teacher(User):
-    def __init__(self, username):
-        super().__init__(username, "teacher")
-        self.subjects = []
-        self.classes = []
-
-class Student(User):
-    def __init__(self, username, student_class):
-        super().__init__(username, "student")
-        self.student_class = student_class
-        self.grades = {}
-
 tries = 3
 print("\nOkul BYS")
 while True:
@@ -46,8 +27,6 @@ while True:
 if role == "admin":
     import principal
     principal.menu()
-elif role == "vice_admin":
-    pass
 elif role == "teacher":
     import teacher
     teacher.menu(current_id)
