@@ -25,19 +25,21 @@ def list_own_grades(current_id):
         print("Şuanda hiçbir ders almıyorsunuz.")
         menu(current_id)
     for grade in grades:
-        ortalama = (grade[2] + grade[3] + grade[4]) / 3
         print(
             f"Ders adı: {grade[0]} - "
             f"1. Sınav: {grade[2]} - "
             f"2. Sınav: {grade[3]} - "
             f"Proje: {grade[4]} - "
-            f"Kredi: {grade[1]} - "
-            f"Ortalama: {ortalama}"
+            f"Kredi: {grade[1]}"
         )
+        if any(not grade[i] for i in (0, 3, 4)):
+            continue
+        ortalama = (grade[2] + grade[3] + grade[4]) / 3
+        print(f"Ortalama: {ortalama}")
         ortalamalar.append(ortalama*grade[1])
         toplam_kredi += grade[1]
     ortalama = 0
     for ort in ortalamalar:
         ortalama += ort
     print("\nGenel Not Ortalaması: ", ortalama/toplam_kredi)
-    
+    menu(current_id)

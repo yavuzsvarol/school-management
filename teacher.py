@@ -24,10 +24,19 @@ def not_yukle(current_id):
     taken_classes = cur.execute("""SELECT subjects.Name FROM grades 
                                 LEFT JOIN subjects ON grades.subject_id = subjects.subject_id 
                                 WHERE grades.student_id=? AND teacher_id=?""", (stu_id, current_id,)).fetchall()
-    subject_names = [subject[0] for subject in taken_classes]
     if not taken_classes:
-        print("Öğrenci sizin verdiğiniz dersleri almıyor.")
-        menu(current_id)
+        new_student = input("Öğrenci sizin verdiğiniz dersleri almıyor. Eklemek ister misiniz? (Y/N): ").lower()
+        if new_student != "y":
+            menu(current_id)
+        else:
+            teacher_subjects = cur.execute("SELECT subject_id, name FROM subjects WHERE teacher_id=?", (current_id,)).fetchall()
+            print(teacher_subjects)
+            new_subject = input("Öğrenciyi eklemek istediğiniz dersin IDsini yazınız: ")
+            cur.execute("INSERT INTO grades (student_id, subject_id) VALUES (?, ?)", (stu_id, new_subject,))
+            taken_classes = cur.execute("""SELECT subjects.Name FROM grades 
+                                LEFT JOIN subjects ON grades.subject_id = subjects.subject_id 
+                                WHERE grades.student_id=? AND teacher_id=?""", (stu_id, current_id,)).fetchall()
+    subject_names = [subject[0] for subject in taken_classes]
     print(subject_names)
     stu_subject = input("Not vermek istediğiniz dersi seçiniz: ")
     subject_id_row = cur.execute("SELECT subject_id FROM subjects WHERE name=?", (stu_subject,)).fetchone()
@@ -50,6 +59,8 @@ def not_yukle(current_id):
     grades = cur.execute("SELECT exam1, exam2, project FROM grades WHERE student_id=? AND subject_id=?", (stu_id, subject_id)).fetchall()
     average = 0
     for grade in grades[0]:
+        if grade == None:
+            break
         average += grade
     average /= len(grades[0])
     cur.execute("UPDATE grades SET average=? WHERE student_id=? AND subject_id=?", (average, stu_id, subject_id))
