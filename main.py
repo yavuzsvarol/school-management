@@ -16,11 +16,11 @@ def menu():
         if (users.fetchone() is None):
             print("Kullanici adi veya sifre hatali")
             tries -= 1
+            continue
         if tries == 0:
             print("Çok fazla deneme yaptınız, program sonlandırılıyor.")
             con.close()
             exit()
-            continue
         else:
             current_id = cur.execute("SELECT id FROM users WHERE username=?", (current_user,)).fetchone()[0]
             role = cur.execute("SELECT role FROM users WHERE id=?", (current_id,)).fetchone()[0]
@@ -34,3 +34,5 @@ def menu():
     elif role == "student":
         import student
         student.menu(current_id)
+
+menu()

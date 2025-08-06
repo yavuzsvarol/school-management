@@ -33,7 +33,13 @@ def not_yukle(current_id):
             teacher_subjects = cur.execute("SELECT id, name FROM subjects WHERE teacher_id=?", (current_id,)).fetchall()
             print(teacher_subjects)
             new_subject = input("Öğrenciyi eklemek istediğiniz dersin IDsini yazınız: ")
-            cur.execute("INSERT INTO grades (student_id, subject_id) VALUES (?, ?)", (stu_id, new_subject,))
+            try:
+                cur.execute("INSERT INTO grades (student_id, subject_id) VALUES (?, ?)", (stu_id, new_subject,))
+            except sqlite3.IntegrityError as e:
+                if "UNIQUE constraint failed" in str(e):
+                    print("")
+                else:
+                    print("Database integrity hatası: ", e)
             taken_classes = cur.execute("""SELECT subjects.Name FROM grades 
                                 LEFT JOIN subjects ON grades.subject_id = subjects.id 
                                 WHERE grades.student_id=? AND teacher_id=?""", (stu_id, current_id,)).fetchall()

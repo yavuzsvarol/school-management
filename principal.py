@@ -105,7 +105,16 @@ def add_user_menu():
     if new_role not in ["admin", "vice_admin", "teacher", "student"]:
         print("Geçersiz rol. Lütfen 'admin', 'vice_admin', 'teacher' veya 'student' olarak giriniz.")
         return add_user_menu()
-    cur.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", (new_username, new_password, new_role))
+    try:
+        cur.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", (new_username, new_password, new_role))
+        con.commit()
+    except sqlite3.IntegrityError as e:
+        if "UNIQUE constraint failed" in str(e):
+            print("Bu kullanici adi zaten bulunmakta.")
+            menu()
+        else:
+            print("Database integrity hatası:", e)
+            menu()
     if new_role == 'student':
         cur.execute("""
     INSERT INTO students (user_id, class_id)
@@ -123,16 +132,32 @@ def add_subject_menu():
     print("\nDers ekleme menusu")
     new_subject = input("Yeni ders adi: ")
     new_subject_credits = input("Ders kredisi: ")
-    cur.execute("INSERT INTO subjects (name, credit) VALUES (?, ?)", (new_subject, new_subject_credits))
-    con.commit()
+    try: 
+        cur.execute("INSERT INTO subjects (name, credit) VALUES (?, ?)", (new_subject, new_subject_credits))
+        con.commit()
+    except sqlite3.IntegrityError as e:
+        if "UNIQUE constraint failed" in str(e):
+            print("Bu isme sahip bir ders zaten var.")
+            menu()
+        else:
+            print("Database integrity hatası:", e)
+            menu()
     print("Ders başarıyla eklendi.")
     menu()
 
 def add_class_menu():
     print("\nSınıf ekleme menusu")
     new_class_name = input("Yeni sınıf adı: ")
-    cur.execute("INSERT INTO classes (name) VALUES (?)", (new_class_name,))
-    con.commit()
+    try:
+        cur.execute("INSERT INTO classes (name) VALUES (?)", (new_class_name,))
+        con.commit()
+    except sqlite3.IntegrityError as e:
+        if "UNIQUE constraint failed" in str(e):
+            print("Bu isme sahip bir sınıf zaten var.")
+            menu()
+        else:
+            print("Database integrity hatası:", e)
+            menu()
     print("Sınıf başarıyla eklendi.")
     menu()
 
