@@ -22,7 +22,8 @@ def menu():
         case "6":
             assign_teacher_to_class_menu()
         case "7":
-            exit()
+            import main
+            main.menu()
         case _:
             print("Geçersiz seçim, lütfen tekrar deneyin.")
             menu()
@@ -55,7 +56,7 @@ def list_users():
 def list_subjects():
     print("\nDers Listesi:")
     subjects = cur.execute("""
-        SELECT subject_id, name, credit, username
+        SELECT id, name, credit, username
         FROM subjects
         LEFT JOIN users ON subjects.teacher_id = users.id AND users.role='teacher'
     """).fetchall()
@@ -69,7 +70,7 @@ def list_subjects():
 def list_classes():
     print("\nSınıf Listesi:")
     classes = cur.execute("""
-        SELECT class_id, name, username
+        SELECT classes.id, name, username
         FROM classes
         LEFT JOIN users ON classes.teacher_id = users.id AND users.role='teacher'
     """).fetchall()
@@ -82,15 +83,15 @@ def list_classes():
 
 def list_grades():
     print("\nNot Listesi:")
-    classes = cur.execute("SELECT class_id FROM classes").fetchall()
+    classes = cur.execute("SELECT id FROM classes").fetchall()
     for a_class in classes:
-        class_name = cur.execute("SELECT name FROM classes WHERE class_id=?", (a_class[0],)).fetchone()
+        class_name = cur.execute("SELECT name FROM classes WHERE id=?", (a_class[0],)).fetchone()
         print("\n", class_name[0], "Sınıfının Notları:")
         grades_of_class = cur.execute ("""SELECT student_id, username, subjects.name, exam1 ,exam2, project, average
                                        FROM grades
                                        LEFT JOIN users ON users.id = grades.student_id
                                        LEFT JOIN students ON students.user_id = grades.student_id
-                                       LEFT JOIN subjects ON grades.subject_id = subjects.subject_id
+                                       LEFT JOIN subjects ON grades.subject_id = subjects.id
                                        WHERE class_id=?""", (a_class[0],)).fetchall()
         for grade in grades_of_class:
             print(f"ID: {grade[0]} - Ad: {grade[1]} - Ders: {grade[2]} - Notlar: {grade[3]} - {grade[4]} - {grade[5]} - Ortalama: {grade[6]}")
@@ -109,7 +110,7 @@ def add_user_menu():
         cur.execute("""
     INSERT INTO students (user_id, class_id)
     SELECT users.id, (
-    SELECT class_id FROM classes ORDER BY RANDOM() LIMIT 1)
+    SELECT id FROM classes ORDER BY RANDOM() LIMIT 1)
     FROM users
     WHERE username = ? AND password = ? AND role = 'student'
     """, (new_username, new_password))

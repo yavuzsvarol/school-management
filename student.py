@@ -10,14 +10,15 @@ def menu(current_id):
         case "1":
             list_own_grades(current_id)
         case "2":
-            exit()
+            import main
+            main.menu()
         case _:
             print("Hatalı girdi")
             menu()
     
 def list_own_grades(current_id):
     grades = cur.execute("""SELECT name, credit, exam1, exam2, project FROM grades
-                         LEFT JOIN subjects ON grades.subject_id = subjects.subject_id
+                         LEFT JOIN subjects ON grades.subject_id = subjects.id
                          WHERE grades.student_id=?""", (str(current_id),)).fetchall()
     ortalamalar = []
     toplam_kredi = 0
