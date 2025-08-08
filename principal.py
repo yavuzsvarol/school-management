@@ -116,13 +116,18 @@ def add_user_menu():
             print("Database integrity hatası:", e)
             menu()
     if new_role == 'student':
+        list_classes()
+        new_class = input("Öğrenciyi eklemek istediğiniz sınıfı seçiniz: ")
         cur.execute("""
-    INSERT INTO students (user_id, class_id)
-    SELECT users.id, (
-    SELECT id FROM classes ORDER BY RANDOM() LIMIT 1)
-    FROM users
-    WHERE username = ? AND password = ? AND role = 'student'
-    """, (new_username, new_password))
+        INSERT INTO students (user_id, class_id)
+            SELECT users.id, 
+        (SELECT id FROM classes WHERE classes.name=?)
+        FROM users
+        WHERE username = ? AND password = ? AND role = 'student'
+        """, (new_class, new_username, new_password))
+        class_subjects = cur.execute("SELECT subject_id FROM class_subjects WHERE classes.name=?", (new_class)).fetchall()
+        for subject in class_subjects:
+            cur.execute("INSERT INTO grades (student_id)")
 
     con.commit()
     print("Kullanici başarıyla eklendi.")
