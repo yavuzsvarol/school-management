@@ -11,16 +11,22 @@ def menu():
     match input("\nSeçiminizi yapınız: "):
         case "1":
             list_data()
+            menu()
         case "2":
             add_user_menu()
+            menu()
         case "3":
             add_subject_menu()
+            menu()
         case "4":
             add_class_menu()
+            menu()
         case "5":
             assign_teacher_to_subject_menu()
+            menu()
         case "6":
             assign_teacher_to_class_menu()
+            menu()
         case "7":
             import main
             main.menu()
@@ -34,12 +40,16 @@ def list_data():
     match input("\nSeçiminizi yapınız: "):
         case "1":
             list_users()
+            list_data()
         case "2":
             list_subjects()
+            list_data()
         case "3":
             list_classes()
+            list_data()
         case "4":
             list_grades()
+            list_data()
         case "5":
             menu()
         case _:
@@ -95,7 +105,6 @@ def list_grades():
                                        WHERE class_id=?""", (a_class[0],)).fetchall()
         for grade in grades_of_class:
             print(f"ID: {grade[0]} - Ad: {grade[1]} - Ders: {grade[2]} - Notlar: {grade[3]} - {grade[4]} - {grade[5]} - Ortalama: {grade[6]}")
-    menu()
 
 def add_user_menu():
     print("\nKullanici ekleme menusu")
@@ -111,10 +120,10 @@ def add_user_menu():
     except sqlite3.IntegrityError as e:
         if "UNIQUE constraint failed" in str(e):
             print("Bu kullanici adi zaten bulunmakta.")
-            menu()
+            return
         else:
             print("Database integrity hatası:", e)
-            menu()
+            return
     if new_role == 'student':
         list_classes()
         new_class = input("Öğrenciyi eklemek istediğiniz sınıfı seçiniz: ")
@@ -131,7 +140,6 @@ def add_user_menu():
 
     con.commit()
     print("Kullanici başarıyla eklendi.")
-    menu()
 
 def add_subject_menu():
     print("\nDers ekleme menusu")
@@ -143,12 +151,11 @@ def add_subject_menu():
     except sqlite3.IntegrityError as e:
         if "UNIQUE constraint failed" in str(e):
             print("Bu isme sahip bir ders zaten var.")
-            menu()
+            return
         else:
             print("Database integrity hatası:", e)
-            menu()
+            return
     print("Ders başarıyla eklendi.")
-    menu()
 
 def add_class_menu():
     print("\nSınıf ekleme menusu")
@@ -159,12 +166,11 @@ def add_class_menu():
     except sqlite3.IntegrityError as e:
         if "UNIQUE constraint failed" in str(e):
             print("Bu isme sahip bir sınıf zaten var.")
-            menu()
+            return
         else:
             print("Database integrity hatası:", e)
-            menu()
+            return
     print("Sınıf başarıyla eklendi.")
-    menu()
 
 def assign_teacher_to_subject_menu():
     subject_count = 0
@@ -174,12 +180,11 @@ def assign_teacher_to_subject_menu():
     subject_count = cur.execute("SELECT COUNT(*) FROM subjects WHERE teacher_id=?", (teacher_id,)).fetchone()[0]
     if subject_count >= 2:
         print("Öğretmen zaten 2 derse atanmış.")
-        menu()
+        return
     subject_name = input("Ders adı giriniz: ")
     cur.execute("UPDATE subjects SET teacher_id=? WHERE name=?", (teacher_id, subject_name))
     con.commit()
     print("Öğretmen başarıyla derse atandı.")
-    menu()
 
 def assign_teacher_to_class_menu():
     class_count = 0
@@ -189,9 +194,8 @@ def assign_teacher_to_class_menu():
     class_count = cur.execute("SELECT COUNT(*) FROM classes WHERE teacher_id=?", (teacher_id,)).fetchone()[0]
     if class_count >= 7:
         print("Öğretmen zaten 7 sınıfa atanmış.")
-        menu()
+        return
     class_name = input("Sınıf adı giriniz: ")
     cur.execute("UPDATE classes SET teacher_id=? WHERE name=?", (teacher_id, class_name))
     con.commit()
     print("Öğretmen başarıyla sınıfa atandı.")
-    menu()
