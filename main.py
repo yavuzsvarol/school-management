@@ -35,3 +35,5 @@ def menu():
         elif role == "student":
             import student
             student.menu(current_id)
+
+menu()

@@ -15,18 +15,24 @@ def menu(current_id):
             case "3":
                 view_subject_grades(current_id)
             case "4":
-                import main
-                main.menu()
+                return
             case _:
                 print("Hatalı girdi")
 
 def not_yukle(current_id):
     view_class_grades(current_id)
-    stu_id = int(input("Not vermek istediğiniz öğrencinin ID'sini giriniz: "))
-    class_ids = cur.execute("SELECT class_id FROM class_subjects WHERE teacher_id=?", (current_id,)).fetchall()
-    if stu_id not in cur.execute("SELECT user_id FROM students WHERE class_id=?", class_ids).fetchall():
+    stu_id = input("Not vermek istediğiniz öğrencinin ID'sini giriniz: ")
+    class_ids = [row[0] for row in cur.execute("SELECT class_id FROM class_subjects WHERE teacher_id=?", (current_id,)).fetchall()]
+    if not class_ids:
+        print("Bu öğretmenin sınıfı yok.")
+        return
+    
+    placeholders = ",".join("?" for _ in class_ids)
+    student_ids = [row[0] for row in cur.execute(f"SELECT user_id FROM students WHERE class_id IN ({placeholders})", class_ids).fetchall()]
+
+    if stu_id not in student_ids:
         print("Öğrenci sınıfınzda değil")
-        menu(current_id)
+        return
     taken_classes = cur.execute("""SELECT subjects.Name FROM grades 
                                 LEFT JOIN subjects ON grades.subject_id = subjects.id 
                                 WHERE grades.student_id=? AND teacher_id=?""", (stu_id, current_id,)).fetchall()
@@ -37,7 +43,7 @@ def not_yukle(current_id):
     subject_id = subject_id_row[0] if subject_id_row else None
     if stu_subject not in subject_names:
         print("Hatalı girdi.")
-        menu(current_id)
+        return
     new_grade = int(input("Girmek istediğiniz not: "))
     match input("Not Güncelleme Ekranı\n1 - 1. Sınav\n2 - 2. Sınav\n3 - Proje\n4 - Geri\nSeçim Yapınız: "):
         case "1":
@@ -63,48 +69,55 @@ def not_yukle(current_id):
     
 def view_class_grades(current_id):
     classes = cur.execute("""SELECT name FROM classes WHERE teacher_id=?""", (current_id,)).fetchall()
-    classes.append(cur.execute("""SELECT name FROM class_subjects
+    classes += cur.execute("""SELECT name FROM class_subjects
                                LEFT JOIN classes ON classes.id = class_subjects.class_id
-                               WHERE teacher_id=?""", (current_id,)).fetchall())
+                               WHERE teacher_id=?""", (current_id,)).fetchall()
     class_names = [a_class[0] for a_class in classes]
+    if not classes:
+        print("Hiçbir sınıfa atanmamışsınız.")
+        return
+    elif selected_class not in class_names:
+        print("Hatalı girdi.")
+        return
     print(class_names)
     selected_class = input("Görüntülemek istediğiniz sınıfı seçiniz: ")
-    if selected_class not in class_names:
-        print("Hatalı girdi.")
-        menu(current_id)
-    elif not classes:
-        print("Hiçbir sınıfa atanmamışsınız.")
-        menu(current_id)
     class_id_row = cur.execute("SELECT id FROM classes WHERE name=?", (selected_class,)).fetchone()
     class_id = class_id_row[0] if class_id_row else None
-    class_to_view = cur.execute("""SELECT users.id, username, subjects.name, exam1, exam2, project, average
-                                FROM users
-                                LEFT JOIN grades ON users.id = grades.student_id
-                                LEFT JOIN subjects ON grades.subject_id = subjects.id
-                                LEFT JOIN students ON students.user_id = users.id 
-                                WHERE class_id=?""", (class_id,)).fetchall()
+    class_to_view = cur.execute("""
+        SELECT users.id, username, subjects.name, exam1, exam2, project, average
+        FROM users
+        LEFT JOIN grades ON users.id = grades.student_id
+        LEFT JOIN subjects ON grades.subject_id = subjects.id
+        LEFT JOIN students ON students.user_id = users.id 
+        LEFT JOIN class_subjects ON class_subjects.class_id = students.class_id
+        WHERE students.class_id=? AND class_subjects.teacher_id=?
+    """, (class_id, current_id)).fetchall()
     for grade in class_to_view:
         print(f"ID: {grade[0]} - Ad: {grade[1]} - Ders: {grade[2]} - Notlar: {grade[3]} - {grade[4]} - {grade[5]} - Ortalama: {grade[6]}")
 
 def view_subject_grades(current_id):
     subjects = cur.execute("SELECT subject_id FROM class_subjects WHERE teacher_id=?", (current_id,)).fetchall()
-    subjects_names = cur.execute("SELECT name FROM subjects WHERE id=?", (subjects))
-    given_subject_names = [subject[0] for subject in subjects_names]
     if not subjects:
         print("Hiçbir derse atanmamışsınız.")
-        menu(current_id)
+        return
+    subject_ids = [row[0] for row in subjects]
+    placeholders = ",".join("?" for _ in subject_ids)
+    subjects_names = cur.execute(f"SELECT name FROM subjects WHERE id IN ({placeholders})", subject_ids).fetchall()
+    given_subject_names = [subject[0] for subject in subjects_names]
     print(given_subject_names)
     selected_subject = input("Görüntülemek istediğiniz dersi seçiniz: ")
     if selected_subject not in given_subject_names:
         print("Hatalı girdi.")
-        menu(current_id)
+        return
     subject_id_row = cur.execute("SELECT id FROM subjects WHERE name=?", (selected_subject,)).fetchone()
     subject_id = subject_id_row[0] if subject_id_row else None
-    subject_to_view = cur.execute("""SELECT users.id, username, exam1, exam2, project, average
-                                FROM users
-                                LEFT JOIN grades ON users.id = grades.student_id
-                                LEFT JOIN subjects ON grades.subject_id = subjects.id
-                                LEFT JOIN students ON students.user_id = users.id 
-                                WHERE grades.subject_id=?""", (subject_id,)).fetchall()
+    subject_to_view = cur.execute("""
+        SELECT users.id, username, exam1, exam2, project, average
+        FROM users
+        LEFT JOIN grades ON users.id = grades.student_id
+        LEFT JOIN students ON students.user_id = users.id
+        LEFT JOIN class_subjects ON class_subjects.class_id = students.class_id
+        WHERE grades.subject_id=? AND class_subjects.teacher_id=?
+    """, (subject_id, current_id)).fetchall()
     for grade in subject_to_view:
         print(f"ID: {grade[0]} - Ad: {grade[1]} - Notlar: {grade[2]} - {grade[3]} - {grade[4]} - Ortalama: {grade[5]}")

@@ -11,8 +11,7 @@ def menu(current_id):
             case "1":
                 list_own_grades(current_id)
             case "2":
-                import main
-                main.menu()
+                return
             case _:
                 print("Hatalı girdi")
     
