@@ -5,56 +5,47 @@ con = sqlite3.connect(path + "\\db1.db")
 cur = con.cursor()
 
 def menu():
-    print("\nMüdür paneline hoş geldiniz.")
-    print("""1 - Verileri Görüntüle\n2 - Kullanici ekle\n3 - Ders Oluştur
-4 - Sınıf Oluştur\n5 - Derse Öğretmen Ata\n6 - Sınıfa Öğretmen Ata\n7 - Çıkış""")
-    match input("\nSeçiminizi yapınız: "):
-        case "1":
-            list_data()
-            menu()
-        case "2":
-            add_user_menu()
-            menu()
-        case "3":
-            add_subject_menu()
-            menu()
-        case "4":
-            add_class_menu()
-            menu()
-        case "5":
-            assign_teacher_to_subject_menu()
-            menu()
-        case "6":
-            assign_teacher_to_class_menu()
-            menu()
-        case "7":
-            import main
-            main.menu()
-        case _:
-            print("Geçersiz seçim, lütfen tekrar deneyin.")
-            menu()
+    while True:
+        print("\nMüdür paneline hoş geldiniz.")
+        print("""1 - Verileri Görüntüle\n2 - Kullanici ekle\n3 - Ders Oluştur
+                4 - Sınıf Oluştur\n5 - Derse Öğretmen Ata\n6 - Sınıfa Öğretmen Ata\n7 - Çıkış""")
+        match input("\nSeçiminizi yapınız: "):
+            case "1":
+                list_data()
+            case "2":
+                add_user_menu()
+            case "3":
+                add_subject_menu()
+            case "4":
+                add_class_menu()
+            case "5":
+                assign_teacher_to_subject_menu()
+            case "6":
+                assign_teacher_to_class_menu()
+            case "7":
+                import main
+                main.menu()
+            case _:
+                print("Geçersiz seçim, lütfen tekrar deneyin.")
 
 def list_data():
-    print("""\nListelemek istediğiniz bilgileri seçiniz\n1 - Kullanicilari Listele
-2 - Dersleri Listele\n3 - Sınıfları Listele\n4 - Notları Listele\n5 - Çıkış""")
-    match input("\nSeçiminizi yapınız: "):
-        case "1":
-            list_users()
-            list_data()
-        case "2":
-            list_subjects()
-            list_data()
-        case "3":
-            list_classes()
-            list_data()
-        case "4":
-            list_grades()
-            list_data()
-        case "5":
-            menu()
-        case _:
-            print("Geçersiz seçim, lütfen tekrar deneyin.")
-            list_data()
+    while True:
+            print("""\nListelemek istediğiniz bilgileri seçiniz\n1 - Kullanicilari Listele
+                    2 - Dersleri Listele\n3 - Sınıfları Listele\n4 - Notları Listele\n5 - Çıkış""")
+            match input("\nSeçiminizi yapınız: "):
+                case "1":
+                    list_users()
+                case "2":
+                    list_subjects()
+                case "3":
+                    list_classes()
+                case "4":
+                    list_grades()
+                case "5":
+                    menu()
+                case _:
+                    print("Geçersiz seçim, lütfen tekrar deneyin.")
+
 
 def list_users():
     print("\nKullanıcı Listesi:")

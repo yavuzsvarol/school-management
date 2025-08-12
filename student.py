@@ -5,16 +5,16 @@ con = sqlite3.connect(path + "\\db1.db")
 cur = con.cursor()
 
 def menu(current_id):
-    print("Öğrenci paneline hoşgeldiniz.")
-    match input("\n1 - Notları Listele\n2 - Çıkış\n\nSeçim Yapınız: "):
-        case "1":
-            list_own_grades(current_id)
-        case "2":
-            import main
-            main.menu()
-        case _:
-            print("Hatalı girdi")
-            menu()
+    while True:
+        print("Öğrenci paneline hoşgeldiniz.")
+        match input("\n1 - Notları Listele\n2 - Çıkış\n\nSeçim Yapınız: "):
+            case "1":
+                list_own_grades(current_id)
+            case "2":
+                import main
+                main.menu()
+            case _:
+                print("Hatalı girdi")
     
 def list_own_grades(current_id):
     grades = cur.execute("""SELECT name, credit, exam1, exam2, project FROM grades
@@ -43,4 +43,3 @@ def list_own_grades(current_id):
     for ort in ortalamalar:
         ortalama += ort
     print("\nGenel Not Ortalaması: ", ortalama/toplam_kredi)
-    menu(current_id)
