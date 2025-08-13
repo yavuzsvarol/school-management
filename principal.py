@@ -8,7 +8,7 @@ def menu():
     while True:
         print("\nMüdür paneline hoş geldiniz.")
         print("""1 - Verileri Görüntüle\n2 - Kullanici ekle\n3 - Ders Oluştur
-4 - Sınıf Oluştur\n5 - Derse Öğretmen Ata\n6 - Sınıfa Öğretmen Ata\n7 - Çıkış""")
+4 - Sınıf Oluştur\n5 - Derse Öğretmen Ata\n6 - Sınıfa Öğretmen Ata\n7 - Sınıfa Ders Ata\n8 - Çıkış""")
         match input("\nSeçiminizi yapınız: "):
             case "1":
                 list_data_menu()
@@ -23,6 +23,8 @@ def menu():
             case "6":
                 assign_teacher_to_class()
             case "7":
+                assign_subject_to_class()
+            case "8":
                 return
             case _:
                 print("Geçersiz seçim, lütfen tekrar deneyin.")
@@ -53,16 +55,9 @@ def list_users():
 
 def list_subjects():
     print("\nDers Listesi:")
-    subjects = cur.execute("""
-        SELECT id, name, credit, username
-        FROM subjects
-        LEFT JOIN users ON subjects.teacher_id = users.id AND users.role='teacher'
-    """).fetchall()
+    subjects = cur.execute("""SELECT subjects.id, name, credit FROM subjects""").fetchall()
     for subject in subjects:
-        if subject[3] is not None:
-            teacher_name = subject[3]
-        else: teacher_name = "Atanmamış"
-        print(f"ID: {subject[0]} - Ders Adı: {subject[1]} - Kredi: {subject[2]} - Öğretmen: {teacher_name}")
+        print(f"ID: {subject[0]} - Ders Adı: {subject[1]} - Kredi: {subject[2]}")
 
 def list_classes():
     print("\nSınıf Listesi:")
@@ -120,7 +115,7 @@ def add_user():
         )
         class_subjects = cur.execute("""SELECT subject_id FROM class_subjects
                                      LEFT JOIN classes ON classes.id = class_subjects.class_id
-                                     WHERE classes.name=?""", (new_class)).fetchall()
+                                     WHERE classes.name=?""", (new_class,)).fetchall()
         if not class_subjects:
             print("Bu sınıf hiçbir dersi almıyor.")
         else:
@@ -184,25 +179,36 @@ def assign_subject_to_class():
         else:
             print("Database integrity hatası:", e)
             return
-    class_student_ids = cur.execute("SELECT user_id FROM students WHERE class_id=?", (selected_class_id)).fetchall()
+    class_student_ids = cur.execute("SELECT user_id FROM students WHERE class_id=?", (selected_class_id,)).fetchall()
     for student in class_student_ids:
         cur.execute("INSERT INTO grades (student_id, subject_id) VALUES (?, ?)", (student[0], selected_subject_id))
     con.commit()
     print("Sınıfa ders başarıyla eklendi.")
 
 def assign_teacher_to_subject():
-    subject_count = 0
-    print("\nDerse öğretmen atama menusu")
-    teacher_username = input("Öğretmen username giriniz: ")
-    teacher_id = cur.execute("SELECT id FROM users WHERE username=? AND role='teacher'", (teacher_username,)).fetchone()[0]
-    subject_count = cur.execute("SELECT COUNT(*) FROM subjects WHERE teacher_id=?", (teacher_id,)).fetchone()[0]
-    if subject_count >= 2:
-        print("Öğretmen zaten 2 derse atanmış.")
+    print("\nDerse öğretmen atama menüsü")
+    teacher_name = input("Öğretmen adını giriniz: ")
+    teacher_id = cur.execute("SELECT id FROM users WHERE username=? AND role='teacher'", (teacher_name,)).fetchone()[0]
+    if not teacher_id:
+        print("Bu adla bir öğretmen bulunamadı.")
         return
-    subject_name = input("Ders adı giriniz: ")
-    cur.execute("UPDATE subjects SET teacher_id=? WHERE name=?", (teacher_id, subject_name))
-    con.commit()
-    print("Öğretmen başarıyla derse atandı.")
+    list_subjects()
+    subject_name = input("Ders adını giriniz: ")
+    subject_id = cur.execute("SELECT id FROM subjects WHERE name=?", (subject_name,)).fetchone()[0]
+    if not subject_id:
+        print("Böyle bir ders bulunamadı.")
+        return
+    try:
+        cur.execute("INSERT INTO teachers (teacher_id, subject_id) VALUES (?,?)", (teacher_id, subject_id,))
+        con.commit()
+    except sqlite3.IntegrityError as e:
+        if "UNIQUE constraint failed" in str(e):
+            print("Bu hocaya bu ders zaten atanmış")
+            return
+        else:
+            print("Database integrity hatası:", e)
+            return
+    print("Öğretmen derse başarıyla atandı.")
 
 def assign_teacher_to_class():
     class_count = 0
