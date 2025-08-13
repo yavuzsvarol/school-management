@@ -8,29 +8,29 @@ def menu():
     while True:
         print("\nMüdür paneline hoş geldiniz.")
         print("""1 - Verileri Görüntüle\n2 - Kullanici ekle\n3 - Ders Oluştur
-              4 - Sınıf Oluştur\n5 - Derse Öğretmen Ata\n6 - Sınıfa Öğretmen Ata\n7 - Çıkış""")
+4 - Sınıf Oluştur\n5 - Derse Öğretmen Ata\n6 - Sınıfa Öğretmen Ata\n7 - Çıkış""")
         match input("\nSeçiminizi yapınız: "):
             case "1":
-                list_data()
+                list_data_menu()
             case "2":
-                add_user_menu()
+                add_user()
             case "3":
-                add_subject_menu()
+                add_subject()
             case "4":
-                add_class_menu()
+                add_class()
             case "5":
-                assign_teacher_to_subject_menu()
+                assign_teacher_to_subject()
             case "6":
-                assign_teacher_to_class_menu()
+                assign_teacher_to_class()
             case "7":
                 return
             case _:
                 print("Geçersiz seçim, lütfen tekrar deneyin.")
 
-def list_data():
+def list_data_menu():
     while True:
             print("""\nListelemek istediğiniz bilgileri seçiniz\n1 - Kullanicilari Listele
-                  2 - Dersleri Listele\n3 - Sınıfları Listele\n4 - Notları Listele\n5 - Çıkış""")
+2 - Dersleri Listele\n3 - Sınıfları Listele\n4 - Notları Listele\n5 - Çıkış""")
             match input("\nSeçiminizi yapınız: "):
                 case "1":
                     list_users()
@@ -44,7 +44,6 @@ def list_data():
                     return
                 case _:
                     print("Geçersiz seçim, lütfen tekrar deneyin.")
-
 
 def list_users():
     print("\nKullanıcı Listesi:")
@@ -93,14 +92,14 @@ def list_grades():
         for grade in grades_of_class:
             print(f"ID: {grade[0]} - Ad: {grade[1]} - Ders: {grade[2]} - Notlar: {grade[3]} - {grade[4]} - {grade[5]} - Ortalama: {grade[6]}")
 
-def add_user_menu():
+def add_user():
     print("\nKullanici ekleme menusu")
     new_username = input("Yeni kullanici adi: ")
     new_password = input("Yeni kullanici sifresi: ")
     new_role = input("Yeni kullanici rolü (admin, vice_admin, teacher, student): ")
-    if new_role not in ["admin", "vice_admin", "teacher", "student"]:
-        print("Geçersiz rol. Lütfen 'admin', 'vice_admin', 'teacher' veya 'student' olarak giriniz.")
-        return add_user_menu()
+    if new_role not in ["admin", "teacher", "student"]:
+        print("Geçersiz rol. Lütfen 'admin', 'teacher' veya 'student' olarak giriniz.")
+        return
     try:
         cur.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", (new_username, new_password, new_role))
         con.commit()
@@ -122,15 +121,15 @@ def add_user_menu():
         class_subjects = cur.execute("""SELECT subject_id FROM class_subjects
                                      LEFT JOIN classes ON classes.id = class_subjects.class_id
                                      WHERE classes.name=?""", (new_class)).fetchall()
-    if not class_subjects:
-        print("Bu sınıf hiçbir dersi almıyor.")
-    else:
-        for subject in class_subjects:
-            cur.execute("INSERT INTO grades (student_id, subject_id) VALUES (?, ?)", (stu_id, subject[0]))
+        if not class_subjects:
+            print("Bu sınıf hiçbir dersi almıyor.")
+        else:
+            for subject in class_subjects:
+                cur.execute("INSERT INTO grades (student_id, subject_id) VALUES (?, ?)", (stu_id, subject[0]))
     con.commit()
     print("Kullanici başarıyla eklendi.")
 
-def add_subject_menu():
+def add_subject():
     print("\nDers ekleme menusu")
     new_subject = input("Yeni ders adi: ")
     new_subject_credits = input("Ders kredisi: ")
@@ -146,7 +145,7 @@ def add_subject_menu():
             return
     print("Ders başarıyla eklendi.")
 
-def add_class_menu():
+def add_class():
     print("\nSınıf ekleme menusu")
     new_class_name = input("Yeni sınıf adı: ")
     try:
@@ -161,7 +160,37 @@ def add_class_menu():
             return
     print("Sınıf başarıyla eklendi.")
 
-def assign_teacher_to_subject_menu():
+def assign_subject_to_class():
+    print("\nSınıfa ders atama menüsü")
+    list_subjects()
+    selected_subject = input("Ders adını girin: ")
+    selected_subject_id = cur.execute("SELECT id FROM subjects WHERE name=?", (selected_subject,)).fetchone()[0]
+    if not selected_subject_id:
+        print("Girdiğiniz isimle bir ders bulunamadı.")
+        return
+    list_classes()
+    selected_class = input("Sınıf adını girin: ")
+    selected_class_id = cur.execute("SELECT id FROM classes WHERE name=?", (selected_class,)).fetchone()[0]
+    if not selected_class_id:
+        print("Girdiğiniz isimle bir sınıf bulunamadı.")
+        return
+    try:
+        cur.execute("INSERT INTO class_subjects (class_id, subject_id) VALUES (?,?)", (selected_class_id, selected_subject_id))
+        con.commit()
+    except sqlite3.IntegrityError as e:
+        if "UNIQUE constraint failed" in str(e):
+            print("Bu sınıfa bu ders zaten atanmış")
+            return
+        else:
+            print("Database integrity hatası:", e)
+            return
+    class_student_ids = cur.execute("SELECT user_id FROM students WHERE class_id=?", (selected_class_id)).fetchall()
+    for student in class_student_ids:
+        cur.execute("INSERT INTO grades (student_id, subject_id) VALUES (?, ?)", (student[0], selected_subject_id))
+    con.commit()
+    print("Sınıfa ders başarıyla eklendi.")
+
+def assign_teacher_to_subject():
     subject_count = 0
     print("\nDerse öğretmen atama menusu")
     teacher_username = input("Öğretmen username giriniz: ")
@@ -175,7 +204,7 @@ def assign_teacher_to_subject_menu():
     con.commit()
     print("Öğretmen başarıyla derse atandı.")
 
-def assign_teacher_to_class_menu():
+def assign_teacher_to_class():
     class_count = 0
     print("\nSınıf öğretmene atama menusu")
     teacher_username = input("Öğretmen kullanıcı adını giriniz: ")

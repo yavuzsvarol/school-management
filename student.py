@@ -23,7 +23,7 @@ def list_own_grades(current_id):
     toplam_kredi = 0
     if not grades:
         print("Şuanda hiçbir ders almıyorsunuz.")
-        menu(current_id)
+        return
     for grade in grades:
         print(
             f"Ders adı: {grade[0]} - "

@@ -1,4 +1,5 @@
 import sqlite3, os
+import principal, teacher, student
 
 path = os.path.dirname(os.path.realpath(__file__))
 con = sqlite3.connect(path + "\\db1.db")
@@ -27,13 +28,10 @@ def menu():
                 role = cur.execute("SELECT role FROM users WHERE id=?", (current_id,)).fetchone()[0]
                 break
         if role == "admin":
-            import principal
             principal.menu()
         elif role == "teacher":
-            import teacher
             teacher.menu(current_id)
         elif role == "student":
-            import student
             student.menu(current_id)
 
 menu()
