@@ -8,7 +8,7 @@ def menu():
     while True:
         print("\nMüdür paneline hoş geldiniz.")
         print("""1 - Verileri Görüntüle\n2 - Kullanici ekle\n3 - Ders Oluştur
-4 - Sınıf Oluştur\n5 - Derse Öğretmen Ata\n6 - Sınıfa Öğretmen Ata\n7 - Sınıfa Ders Ata\n8 - Çıkış""")
+4 - Sınıf Oluştur\n5 - Derse Öğretmen Ata\n6 - Sınıf Öğretmeni Belirle\n7 - Sınıfa Ders Ata\n8 - Çıkış""")
         match input("\nSeçiminizi yapınız: "):
             case "1":
                 list_data_menu()
@@ -155,13 +155,26 @@ def add_class():
             return
     print("Sınıf başarıyla eklendi.")
 
-def assign_subject_to_class():
+def assign_subject_to_class():      #class_subjects tablosu row ekleme
     print("\nSınıfa ders atama menüsü")
     list_subjects()
     selected_subject = input("Ders adını girin: ")
     selected_subject_id = cur.execute("SELECT id FROM subjects WHERE name=?", (selected_subject,)).fetchone()[0]
     if not selected_subject_id:
         print("Girdiğiniz isimle bir ders bulunamadı.")
+        return
+    subject_teachers = cur.execute("""SELECT teacher_id, username FROM teachers
+                                   LEFT JOIN users ON teacher_id = users.id
+                                   WHERE subject_id=?""", (selected_subject_id,)).fetchall()
+    if not subject_teachers:
+        print("Bu dersi hiçbir öğretmen vermiyor.")
+        return
+    print("\nDersi veren öğretmenler: ")
+    for teacher in subject_teachers:
+        print(f"ID: {teacher[0]} - Kullanıcı Adı: {teacher[1]}")
+    selected_teacher = input("Dersi verecek öğretmenin IDsini giriniz: ")
+    if selected_teacher not in subject_teachers:
+        print("Hatalı seçim.")
         return
     list_classes()
     selected_class = input("Sınıf adını girin: ")
@@ -170,7 +183,8 @@ def assign_subject_to_class():
         print("Girdiğiniz isimle bir sınıf bulunamadı.")
         return
     try:
-        cur.execute("INSERT INTO class_subjects (class_id, subject_id) VALUES (?,?)", (selected_class_id, selected_subject_id))
+        cur.execute("""INSERT INTO class_subjects (class_id, subject_id, teacher_id) 
+                    VALUES (?,?,?)""", (selected_class_id, selected_subject_id, selected_teacher,))
         con.commit()
     except sqlite3.IntegrityError as e:
         if "UNIQUE constraint failed" in str(e):
@@ -185,7 +199,7 @@ def assign_subject_to_class():
     con.commit()
     print("Sınıfa ders başarıyla eklendi.")
 
-def assign_teacher_to_subject():
+def assign_teacher_to_subject():    #teachers tablosu row ekleme
     print("\nDerse öğretmen atama menüsü")
     teacher_name = input("Öğretmen adını giriniz: ")
     teacher_id = cur.execute("SELECT id FROM users WHERE username=? AND role='teacher'", (teacher_name,)).fetchone()[0]
@@ -210,15 +224,16 @@ def assign_teacher_to_subject():
             return
     print("Öğretmen derse başarıyla atandı.")
 
-def assign_teacher_to_class():
+def assign_teacher_to_class():  #Sınıf öğretmeni
     class_count = 0
-    print("\nSınıf öğretmene atama menusu")
+    print("\nSınıf öğretmeni belirleme menüsü")
     teacher_username = input("Öğretmen kullanıcı adını giriniz: ")
     teacher_id = cur.execute("SELECT id FROM users WHERE username=? AND role='teacher'", (teacher_username,)).fetchone()[0]
     class_count = cur.execute("SELECT COUNT(*) FROM classes WHERE teacher_id=?", (teacher_id,)).fetchone()[0]
-    if class_count >= 7:
-        print("Öğretmen zaten 7 sınıfa atanmış.")
+    if class_count >= 1:
+        print("Öğretmen zaten bir sınıfa atanmış.")
         return
+    list_classes()
     class_name = input("Sınıf adı giriniz: ")
     cur.execute("UPDATE classes SET teacher_id=? WHERE name=?", (teacher_id, class_name))
     con.commit()
