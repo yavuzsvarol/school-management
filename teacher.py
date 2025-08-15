@@ -128,7 +128,7 @@ def view_subject_grades(current_id):
     subject_id_row = cur.execute("SELECT id FROM subjects WHERE name=?", (selected_subject,)).fetchone()
     subject_id = subject_id_row[0] if subject_id_row else None
     subject_to_view = cur.execute("""
-        SELECT users.id, username, exam1, exam2, project, average
+        SELECT DISTINCT users.id, username, exam1, exam2, project, average
         FROM users
         LEFT JOIN grades ON users.id = grades.student_id
         LEFT JOIN students ON students.user_id = users.id

@@ -41,4 +41,7 @@ def list_own_grades(current_id):
     ortalama = 0
     for ort in ortalamalar:
         ortalama += ort
-    print("\nGenel Not Ortalaması: ", ortalama/toplam_kredi)
+    try:
+        print("\nGenel Not Ortalaması: ", ortalama/toplam_kredi)
+    except ZeroDivisionError:
+        print("\nGenel Not Ortalaması: 0")
