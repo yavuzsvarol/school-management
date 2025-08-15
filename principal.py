@@ -166,14 +166,19 @@ def assign_subject_to_class():      #class_subjects tablosu row ekleme
     subject_teachers = cur.execute("""SELECT teacher_id, username FROM teachers
                                    LEFT JOIN users ON teacher_id = users.id
                                    WHERE subject_id=?""", (selected_subject_id,)).fetchall()
-    if not subject_teachers:
-        print("Bu dersi hiçbir öğretmen vermiyor.")
-        return
     print("\nDersi veren öğretmenler: ")
     for teacher in subject_teachers:
         print(f"ID: {teacher[0]} - Kullanıcı Adı: {teacher[1]}")
-    selected_teacher = input("Dersi verecek öğretmenin IDsini giriniz: ")
-    if selected_teacher not in subject_teachers:
+    if not subject_teachers:
+        print("Bu dersi hiçbir öğretmen vermiyor.")
+        return
+    subject_teachers_row = [row[0] for row in subject_teachers]
+    try:
+        selected_teacher = int(input("Dersi verecek öğretmenin IDsini giriniz: "))
+    except ValueError:
+        print("Lütfen bir sayı girin.")
+        return
+    if selected_teacher not in subject_teachers_row:
         print("Hatalı seçim.")
         return
     list_classes()

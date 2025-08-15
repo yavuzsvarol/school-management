@@ -20,56 +20,70 @@ def menu(current_id):
                 print("Hatalı girdi")
 
 def not_yukle(current_id):
-    view_subject_grades(current_id)
+    selected_subject = view_subject_grades(current_id)
+    if not selected_subject: return
     class_ids = [row[0] for row in cur.execute("SELECT class_id FROM class_subjects WHERE teacher_id=?", (current_id,)).fetchall()]
     if not class_ids:
         print("Bu öğretmenin sınıfı yok.")
         return
-    stu_id = input("Not vermek istediğiniz öğrencinin ID'sini giriniz: ")
-
+    try:
+        stu_id = int(input("Not vermek istediğiniz öğrencinin ID'sini giriniz: "))
+    except ValueError:
+        print("Lütfen geçerli bir sayı giriniz.")
+        return
     i = 0
     for a_class in class_ids:
         student_ids = [row[0] for row in cur.execute("SELECT user_id FROM students WHERE class_id=?", (a_class,)).fetchall()]
-        if int(stu_id) in student_ids:
+        if stu_id in student_ids:
             break
         else:
             i += 1
             if i == len(class_ids):
                 print("Öğrenci sınıfınızda değil")
                 return
-    taken_classes = cur.execute("""SELECT subjects.Name FROM grades 
-                                LEFT JOIN subjects ON grades.subject_id = subjects.id 
-                                WHERE grades.student_id=? AND teacher_id=?""", (stu_id, current_id,)).fetchall()
+    taken_classes = cur.execute("""SELECT s.name FROM grades
+                                LEFT JOIN subjects s ON s.id = grades.subject_id
+                                LEFT JOIN class_subjects cs ON cs.subject_id = s.id
+                                WHERE grades.student_id=? AND cs.teacher_id=?""", (stu_id, current_id,)).fetchall()
     subject_names = [subject[0] for subject in taken_classes]
-    print(subject_names)
-    stu_subject = input("Not vermek istediğiniz dersi seçiniz: ")
-    subject_id_row = cur.execute("SELECT id FROM subjects WHERE name=?", (stu_subject,)).fetchone()
+    subject_id_row = cur.execute("SELECT id FROM subjects WHERE name=?", (selected_subject,)).fetchone()
     subject_id = subject_id_row[0] if subject_id_row else None
-    if stu_subject not in subject_names:
+    if selected_subject not in subject_names:
         print("Hatalı girdi.")
         return
-    new_grade = int(input("Girmek istediğiniz not: "))
-    match input("Not Güncelleme Ekranı\n1 - 1. Sınav\n2 - 2. Sınav\n3 - Proje\n4 - Geri\nSeçim Yapınız: "):
-        case "1":
-            cur.execute("UPDATE grades SET exam1=? WHERE student_id=? AND subject_id=?", (new_grade, stu_id, subject_id))
-        case "2":
-            cur.execute("UPDATE grades SET exam2=? WHERE student_id=? AND subject_id=?", (new_grade, stu_id, subject_id))
-        case "3":
-            cur.execute("UPDATE grades SET project=? WHERE student_id=? AND subject_id=?", (new_grade, stu_id, subject_id))
-        case "4":
-            pass
-        case _:
-            print("Hatalı giriş.")
-    grades = cur.execute("SELECT exam1, exam2, project FROM grades WHERE student_id=? AND subject_id=?", (stu_id, subject_id)).fetchall()
-    average = 0
-    for grade in grades[0]:
-        if grade == None:
-            break
-        average += grade
-    average /= len(grades[0])
-    cur.execute("UPDATE grades SET average=? WHERE student_id=? AND subject_id=?", (average, stu_id, subject_id))
-    con.commit()
-    print("Not başarıyla güncenlendi.")
+    while True:
+        grade_to_enter = input("Not gireceğiniz sınavı seçiniz\n1 - 1. Sınav\n2 - 2. Sınav\n3 - Proje\n4 - Çıkış\nSeçim Yapınız: ")
+        if grade_to_enter == "4": break
+        try:
+            new_grade = int(input("Girmek istediğiniz not: "))
+        except ValueError:
+            print("Lütfen geçerli bir sayı giriniz.")
+            continue
+        if new_grade < 0 or new_grade > 100:
+            print("Lütfen 0 ile 100 arasında bir sayı giriniz.")
+            continue
+        match grade_to_enter:
+            case "1":
+                cur.execute("UPDATE grades SET exam1=? WHERE student_id=? AND subject_id=?", (new_grade, stu_id, subject_id))
+                print("Not güncellendi.\n")
+            case "2":
+                cur.execute("UPDATE grades SET exam2=? WHERE student_id=? AND subject_id=?", (new_grade, stu_id, subject_id))
+                print("Not güncellendi.\n")
+            case "3":
+                cur.execute("UPDATE grades SET project=? WHERE student_id=? AND subject_id=?", (new_grade, stu_id, subject_id))
+                print("Not güncellendi.\n")
+            case _:
+                print("Hatalı giriş.")
+        grades = cur.execute("SELECT exam1, exam2, project FROM grades WHERE student_id=? AND subject_id=?", (stu_id, subject_id)).fetchall()
+        average = 0
+        for grade in grades[0]:
+            if grade == None:
+                break
+            average += grade
+        average /= len(grades[0])
+        cur.execute("UPDATE grades SET average=? WHERE student_id=? AND subject_id=?", (average, stu_id, subject_id))
+        con.commit()
+    print("Not başarıyla güncellendi.")
     
 def view_class_grades(current_id):
     classes = cur.execute("""SELECT name FROM classes WHERE teacher_id=?""", (current_id,)).fetchall()
@@ -77,6 +91,7 @@ def view_class_grades(current_id):
                                LEFT JOIN classes ON classes.id = class_subjects.class_id
                                WHERE class_subjects.teacher_id=?""", (current_id,)).fetchall()
     class_names = [a_class[0] for a_class in classes]
+    class_names = list(dict.fromkeys(class_names))
     if not classes:
         print("Hiçbir sınıfa atanmamışsınız.")
         return
@@ -122,3 +137,4 @@ def view_subject_grades(current_id):
     """, (subject_id, current_id)).fetchall()
     for grade in subject_to_view:
         print(f"ID: {grade[0]} - Ad: {grade[1]} - Notlar: {grade[2]} - {grade[3]} - {grade[4]} - Ortalama: {grade[5]}")
+    return selected_subject
